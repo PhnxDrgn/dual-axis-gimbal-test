@@ -25,7 +25,7 @@ void APP_main()
     // enable servo
     serialPrint("enabling servo\n\r");
     enableServo();
-    setServo(servoAngle);
+    setPitch(servoAngle);
 
     // init accelerometer/gyro
     if (MPU6050_init(&mpuData) == MPU6050_ok)
@@ -68,7 +68,7 @@ void APP_main()
 
         servoAngle += servoAngleDelta;
 
-        setServo(servoAngle);
+        setPitch(servoAngle);
     }
 }
 

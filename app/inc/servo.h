@@ -11,7 +11,8 @@ extern "C"
 
     void enableServo();
     void disableServo();
-    void setServo(float angle);
+    void setPitch(float angle);
+    void setRoll(float angle);
 
 #ifdef __cplusplus
 }
