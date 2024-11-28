@@ -9,9 +9,10 @@ extern "C"
 #define SERVO_ANGLE_MAX 90.0
 #define SERVO_ANGLE_MIN -90.0
 
-    void enableServo();
-    void disableServo();
-    void setServo(float angle);
+    void enableServos();
+    void disableServos();
+    void setPitch(float angle);
+    void setRoll(float angle);
 
 #ifdef __cplusplus
 }

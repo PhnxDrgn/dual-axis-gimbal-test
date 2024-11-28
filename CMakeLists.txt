@@ -9,7 +9,7 @@ set(CMAKE_TOOLCHAIN_FILE "../arm-none-eabi-gcc.cmake")
 set(CUBE_PROG_EXE $ENV{CUBE_PROG_EXE}) 
 
 # set project name
-project(where-is-up)
+project(dual-axis-gimbal-test)
 
 # Set microcontroller information
 set(MCU_FAMILY STM32F3xx)

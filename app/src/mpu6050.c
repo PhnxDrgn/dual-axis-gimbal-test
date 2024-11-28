@@ -158,8 +158,8 @@ MPU6050_status_t MPU6050_getData(MPU6050_data_t *data)
         gyroData.z *= timeDelta;
 
         // update pitch roll yaw
-        data->pitch += gyroData.x;
-        data->roll += gyroData.y;
+        data->roll += gyroData.x;
+        data->pitch += gyroData.y;
         data->yaw += gyroData.z;
 
         // update ref time

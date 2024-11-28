@@ -5,27 +5,59 @@
 #include "string.h"
 #include "servo.h"
 #include "helpers.h"
+#include "pid.h"
 
 #define ERROR_SUM_MAX 100.0
 #define ERROR_SUM_MIN -100.0
 
 MPU6050_data_t mpuData;
 volatile bool mpuDataUpdated = false;
-float servoAngle = 0;
-volatile float pitchError = 0;
+float pitchAngle = 0, rollAngle = 0;
 
-float P = 0.05, I = 0.002, D = 0.3;
-volatile float error = 0.0;
-volatile float errorPrev = 0.0;
-volatile float errorSum = 0.0;
-float servoAngleDelta = 0.0;
+// float P = 0.05, I = 0.002, D = 0.3;
+PID_t pitch;
+PID_t roll;
+
+void updatePitch()
+{
+    pitchAngle += pitch.output;
+    pitchAngle = min(pitchAngle, SERVO_ANGLE_MAX);
+    pitchAngle = max(pitchAngle, SERVO_ANGLE_MIN);
+
+    setPitch(pitchAngle);
+}
+
+void updateRoll()
+{
+    rollAngle += roll.output;
+    rollAngle = min(rollAngle, SERVO_ANGLE_MAX);
+    rollAngle = max(rollAngle, SERVO_ANGLE_MIN);
+
+    setRoll(rollAngle);
+}
 
 void APP_main()
 {
+    // init vars
+    PID_init(&pitch);
+    PID_init(&roll);
+
+    // set pid
+    pitch.P = 0.15;
+    pitch.I = 0.00;
+    pitch.D = 0.00;
+    roll.P = 0.15;
+    roll.I = 0.00;
+    roll.D = 0.00;
+
     // enable servo
     serialPrint("enabling servo\n\r");
-    enableServo();
-    setServo(servoAngle);
+    enableServos();
+    setPitch(pitchAngle);
+    setRoll(rollAngle);
+
+    // delay 5 seconds to start calibration
+    delay(1000);
 
     // init accelerometer/gyro
     if (MPU6050_init(&mpuData) == MPU6050_ok)
@@ -49,26 +81,17 @@ void APP_main()
             memset(buffer, '\0', sizeof(buffer));
 
             // tuning prints
-            // snprintf(buffer, sizeof(buffer), "pitch: %7.02f\tservoAngleDelta: %7.02f\terrSum: %7.02f\n\r", mpuData.pitch, servoAngleDelta, errorSum);
+            // snprintf(buffer, sizeof(buffer), "pitch: %7.02f\tpitch.output: %7.02f\terrSum: %7.02f\n\r", mpuData.pitch, pitch.output, pitch.errorSum);
+            snprintf(buffer, sizeof(buffer), "roll: %7.02f\troll.output: %7.02f\terrSum: %7.02f\n\r", mpuData.roll, roll.output, roll.errorSum);
 
             // data logging prints
-            snprintf(buffer, sizeof(buffer), "%06ld,%7.02f\n\r", millis(), mpuData.pitch);
+            // snprintf(buffer, sizeof(buffer), "%06ld,%7.02f\n\r", millis(), mpuData.pitch);
 
             serialPrint(buffer);
+
+            updatePitch();
+            updateRoll();
         }
-
-        // angle to be applied to current position
-        servoAngleDelta = (P * error) + (I * errorSum) + (D * (error - errorPrev));
-
-        // limiting the change to be within bounds of possible angles
-        float servoAngleDeltaMax = SERVO_ANGLE_MAX - servoAngle;
-        float servoAngleDeltaMin = SERVO_ANGLE_MIN - servoAngle;
-        servoAngleDelta = min(servoAngleDelta, servoAngleDeltaMax);
-        servoAngleDelta = max(servoAngleDelta, servoAngleDeltaMin);
-
-        servoAngle += servoAngleDelta;
-
-        setServo(servoAngle);
     }
 }
 
@@ -80,12 +103,7 @@ void APP_mpuIntReqHandler()
 
     if (mpuDataUpdated)
     {
-        errorPrev = error;
-        error = mpuData.pitch;
-        errorSum += error;
-
-        // limit error sum
-        errorSum = min(errorSum, ERROR_SUM_MAX);
-        errorSum = max(errorSum, ERROR_SUM_MIN);
+        PID_update(&pitch, -mpuData.pitch);
+        PID_update(&roll, -mpuData.roll);
     }
 }
