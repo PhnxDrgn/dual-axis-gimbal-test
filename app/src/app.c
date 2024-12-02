@@ -43,10 +43,10 @@ void APP_main()
     PID_init(&roll);
 
     // set pid
-    pitch.P = 0.15;
+    pitch.P = 0.20;
     pitch.I = 0.00;
     pitch.D = 0.00;
-    roll.P = 0.15;
+    roll.P = 0.20;
     roll.I = 0.00;
     roll.D = 0.00;
 
